@@ -5,8 +5,7 @@
 Query planning.
 """
 
-import csv
-import pathlib
+from collections.abc import Iterator
 import typing
 
 from icecream import ic  # type: ignore  # pylint: disable=E0401,W0611
@@ -30,12 +29,13 @@ Constructor.
 
     def load_ast (
         self,
-        ast_path: pathlib.Path,
+        tsv_iter: Iterator,
         ) -> None:
         """
 Load a TSV file of AST items.
         """
-        for row in csv.reader(ast_path.open(), delimiter="\t"):
+        for tsv_row in tsv_iter:
+            row = tsv_row.split("\t")
             item = CypherItem(row)
 
             # back-link the parent item

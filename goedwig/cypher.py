@@ -29,7 +29,7 @@ Constructor.
         self.s0: int = int(s0)  # pylint: disable=C0103
         self.s1: int = int(s1)  # pylint: disable=C0103
         self.ast_typestr: str = ast_typestr
-        self.literal: str = literal
+        self.literal: str = literal.strip()
         self.children: typing.List[int] = []
 
 

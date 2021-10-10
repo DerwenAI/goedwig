@@ -1,0 +1,38 @@
+0	-1	0	0	173	statement	
+1	0	1	0	173	query	
+2	1	2	0	67	MATCH	
+3	2	3	6	66	pattern	
+4	3	4	6	66	pattern path	
+5	4	5	6	37	node pattern	
+6	5	6	7	10	identifier	tom
+7	5	6	10	17	label	
+8	5	6	18	36	map	
+9	8	7	19	23	prop name	name
+10	8	7	24	35	string	'Tom Hanks'
+11	4	5	37	53	rel pattern	
+12	11	6	39	42	identifier	rel
+13	11	6	42	51	rel type	
+14	4	5	53	66	node pattern	
+15	14	6	54	59	identifier	movie
+16	14	6	59	65	label	
+17	1	2	67	173	RETURN	
+18	17	3	74	90	projection	
+19	18	4	74	83	property	
+20	19	5	74	77	identifier	tom
+21	19	5	78	82	prop name	name
+22	18	4	86	90	identifier	name
+23	17	3	92	115	projection	
+24	23	4	92	101	property	
+25	24	5	92	95	identifier	tom
+26	24	5	96	100	prop name	born
+27	23	4	104	115	identifier	`Year Born`
+28	17	3	117	137	projection	
+29	28	4	117	129	property	
+30	29	5	117	122	identifier	movie
+31	29	5	123	128	prop name	title
+32	28	4	132	137	identifier	title
+33	17	3	139	173	projection	
+34	33	4	139	154	property	
+35	34	5	139	144	identifier	movie
+36	34	5	145	153	prop name	released
+37	33	4	157	172	identifier	`Year Released`
