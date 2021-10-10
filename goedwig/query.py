@@ -47,70 +47,76 @@ Printed representation for an AST item.
 
 
 
-def load_ast (
-    ast_path: pathlib.Path,
-    ) -> typing.List[CypherItem]:
+class Query:
     """
+Manage the lifecycle of query plan.
+    """
+
+    def load_ast (  # pylint: disable=R0201
+        self,
+        ast_path: pathlib.Path,
+        ) -> typing.List[CypherItem]:
+        """
 Load a TSV file of AST items.
-    """
-    items: typing.List[CypherItem] = []
+        """
+        items: typing.List[CypherItem] = []
 
-    for row in csv.reader(ast_path.open(), delimiter="\t"):
-        ordinal, parent, depth, s0, s1, ast_typestr, literal = row  # pylint: disable=C0103
+        for row in csv.reader(ast_path.open(), delimiter="\t"):
+            ordinal, parent, depth, s0, s1, ast_typestr, literal = row  # pylint: disable=C0103
 
-        item = CypherItem()
-        item.ordinal = int(ordinal)
-        item.parent = int(parent)
-        item.depth = int(depth)
-        item.s0 = int(s0)  # pylint: disable=C0103
-        item.s1 = int(s1)  # pylint: disable=C0103
-        item.ast_typestr = ast_typestr
-        item.literal = literal
-        item.children = []
+            item = CypherItem()
+            item.ordinal = int(ordinal)
+            item.parent = int(parent)
+            item.depth = int(depth)
+            item.s0 = int(s0)  # pylint: disable=C0103
+            item.s1 = int(s1)  # pylint: disable=C0103
+            item.ast_typestr = ast_typestr
+            item.literal = literal
+            item.children = []
 
-        # back-link the parent item
-        if item.parent >= 0:
-            items[item.parent].children.append(item.ordinal)
+            # back-link the parent item
+            if item.parent >= 0:
+                items[item.parent].children.append(item.ordinal)
 
-        items.append(item)
+            items.append(item)
 
-    return items
+        return items
 
 
-def query_plan (  # pylint: disable=R0914,W0621
-    items: typing.List[CypherItem],
-    ) -> typing.Any:
-    """
+    def query_plan (  # pylint: disable=R0201,R0914,W0621
+        self,
+        items: typing.List[CypherItem],
+        ) -> typing.Tuple[str, str, str, str]:
+        """
 Develop a query plan from the given AST items.
+        """
+        i = 0
 
-(THIS NEEDS LOTS OF WORK)
-    """
-    i = 0
+        while i < len(items):
+            if items[i].ast_typestr == "statement":
+                break
 
-    while i < len(items):
-        if items[i].ast_typestr == "statement":
-            break
+            i += 1
 
-        i += 1
+        query_i = items[i].children[0]
+        match_i, ret_i = items[query_i].children
 
-    # at "statement"
-    query_i = items[i].children[0]
-    # at "query"
-    match_i, ret_i = items[query_i].children
+        ## bindings
+        pat_i = items[match_i].children[0]
+        pat_path_i = items[pat_i].children[0]
+        node_pat_i = items[pat_path_i].children[0]
 
-    pat_i = items[match_i].children[0]
-    pat_path_i = items[pat_i].children[0]
-    node_pat_i = items[pat_path_i].children[0]
+        ident_i, map_i = items[node_pat_i].children
+        node_name = items[ident_i].literal  # pylint: disable=W0621
 
-    ident_i, map_i = items[node_pat_i].children
-    node_name = items[ident_i].literal  # pylint: disable=W0621
+        ## selection
+        prop_i, val_i = items[map_i].children
+        prop_key = items[prop_i].literal  # pylint: disable=W0621
+        prop_val = items[val_i].literal.strip("'")  # pylint: disable=W0621
 
-    prop_i, val_i = items[map_i].children
-    prop_key = items[prop_i].literal  # pylint: disable=W0621
-    prop_val = items[val_i].literal.strip("'")  # pylint: disable=W0621
+        ## projection
+        proj_i = items[ret_i].children[0]
+        ident_i = items[proj_i].children[0]
+        ret_name = items[ident_i].literal  # pylint: disable=W0621
 
-    proj_i = items[ret_i].children[0]
-    ident_i = items[proj_i].children[0]
-    ret_name = items[ident_i].literal  # pylint: disable=W0621
-
-    return node_name, prop_key, prop_val, ret_name
+        return (node_name, prop_key, prop_val, ret_name)
