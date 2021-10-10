@@ -12,10 +12,12 @@ import goedwig
 
 
 if __name__ == "__main__":
+    q = goedwig.Query()
+
     ast_path = pathlib.Path("dat/cyp") / "q1.tsv"
-    items = goedwig.load_ast(ast_path)
+    items = q.load_ast(ast_path)
 
     for item in items:
         print(item)
 
-    ic(goedwig.query_plan(items))
+    ic(q.query_plan(items))

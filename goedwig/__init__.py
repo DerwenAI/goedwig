@@ -5,4 +5,4 @@
 Importable package definitions.
 """
 
-from .query import CypherItem, load_ast, query_plan
+from .query import CypherItem, Query
