@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-TAG = $(git tag | sort -r | head -1)
+TAG=$(git tag | sort -r | head -1)
 echo "'git tag'" > goedwig/tag.py 
 echo "TAG = '$TAG'" >> goedwig/tag.py
 

@@ -32,9 +32,9 @@ pre-commit install
 git config --local core.hooksPath .git/hooks/
 ```
 
-Then initialize the tag-base versioning:
+Then initialize the tag-based versioning:
 ```
-TAG = $(git tag | sort -r | head -1)
+TAG=$(git tag | sort -r | head -1)
 echo "'git tag'" > goedwig/tag.py
 echo "TAG = '$TAG'" >> goedwig/tag.py
 ```
