@@ -1,5 +1,12 @@
 # `goedwig` changelog
 
+## 0.1.4
+
+2021-10-10
+
+  * reworked versioning to store Git tags in a Py module
+
+
 ## 0.1.3
 
 2021-10-10
