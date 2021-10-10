@@ -5,4 +5,5 @@
 Importable package definitions.
 """
 
-from .query import CypherItem, Query
+from .cypher import CypherItem
+from .query import Query
