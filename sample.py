@@ -12,7 +12,7 @@ import goedwig
 
 
 if __name__ == "__main__":
-    #print(goedwig.__version__)
+    print(goedwig.__version__)
 
     ast_path = pathlib.Path("dat/cyp") / "q1.tsv"
 
