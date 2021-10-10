@@ -11,14 +11,14 @@ python3 -m pip install -r requirements.txt
 ```
 
 
-## Run
+## Run example
 
 ```
 python3 sample.py
 ```
 
 
-## Build
+## Build setup
 
 ```
 python3 -m pip install -U pip setuptools wheel
@@ -30,6 +30,14 @@ and to configure that locally:
 ```
 pre-commit install
 git config --local core.hooksPath .git/hooks/
+```
+
+
+## Package release
+
+```
+python3 setup.py install --dry-run
+./bin/push_pypi.sh
 ```
 
 
