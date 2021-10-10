@@ -9,18 +9,21 @@ import csv
 import pathlib
 import typing
 
-from icecream import ic
+from icecream import ic  # type: ignore  # pylint: disable=E0401,W0611
 
 
-class CypherItem:
+class CypherItem:  # pylint: disable=R0902,R0903
+    """
+Represent data for one AST tree item in a parsed Cypher query.
+    """
     ordinal: int = -1
     parent: int = -1
     depth: int = -1
     s0: int = -1
     s1: int = -1
-    ast_typestr: str = None
+    ast_typestr: typing.Optional[str] = None
     literal: str = ""
-    children: typing.List[int] = None
+    children: typing.List[int] = []
 
     def __repr__ (
         self,
@@ -29,7 +32,19 @@ class CypherItem:
 Printed representation for an AST item.
         """
         kiddos = str(self.children)
-        return f"@{self.ordinal}[{self.parent}]\t{self.s0}..{self.s1}\t{self.depth:<4}{kiddos:<10}{self.ast_typestr:<16} |> {self.literal}"
+        line = "@{}[{}]\t{}..{}\t{:<4}{:<10}{:<16} |> {}".format(
+            self.ordinal,
+            self.parent,
+            self.s0,
+            self.s1,
+            self.depth,
+            kiddos,
+            self.ast_typestr,
+            self.literal,
+            )
+
+        return line
+
 
 
 def load_ast (
@@ -40,25 +55,24 @@ Load a TSV file of AST items.
     """
     items: typing.List[CypherItem] = []
 
-    with open(ast_path, "r") as f:
-        for row in csv.reader(f, delimiter="\t"):
-            ordinal, parent, depth, s0, s1, ast_typestr, literal = row
+    for row in csv.reader(ast_path.open(), delimiter="\t"):
+        ordinal, parent, depth, s0, s1, ast_typestr, literal = row  # pylint: disable=C0103
 
-            item = CypherItem()
-            item.ordinal = int(ordinal)
-            item.parent = int(parent)
-            item.depth = int(depth)
-            item.s0 = int(s0)
-            item.s1 = int(s1)
-            item.ast_typestr = ast_typestr
-            item.literal = literal
-            item.children = []
+        item = CypherItem()
+        item.ordinal = int(ordinal)
+        item.parent = int(parent)
+        item.depth = int(depth)
+        item.s0 = int(s0)  # pylint: disable=C0103
+        item.s1 = int(s1)  # pylint: disable=C0103
+        item.ast_typestr = ast_typestr
+        item.literal = literal
+        item.children = []
 
-            # back-link the parent item
-            if item.parent >= 0:
-                items[item.parent].children.append(item.ordinal)
+        # back-link the parent item
+        if item.parent >= 0:
+            items[item.parent].children.append(item.ordinal)
 
-            items.append(item)
+        items.append(item)
 
     return items
 

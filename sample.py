@@ -7,7 +7,7 @@ Sample code.
 
 import pathlib
 
-from icecream import ic
+from icecream import ic  # type: ignore  # pylint: disable=E0401,W0611
 import goedwig
 
 
