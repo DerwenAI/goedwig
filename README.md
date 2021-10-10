@@ -30,6 +30,7 @@ and to configure that locally:
 ```
 pre-commit install
 git config --local core.hooksPath .git/hooks/
+git tag | sort -r | head -1 > TAG
 ```
 
 
