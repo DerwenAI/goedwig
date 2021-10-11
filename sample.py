@@ -16,14 +16,15 @@ if __name__ == "__main__":
 
     ast_path = pathlib.Path("dat/cyp") / "q1.tsv"
 
-    q = goedwig.Query()
+    q = goedwig.QueryPlan()
     tsv_iter = iter(ast_path.open(encoding="utf-8").readlines())
     q.load_ast(tsv_iter)
 
     for item in q.items:
         print(item)
 
-    ic(q.query_plan())
+    q.parse_items()
+    print(q)
 
     assert len(q.items) == 14
     assert q.items[-1].literal == "p"

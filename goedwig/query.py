@@ -13,9 +13,102 @@ from icecream import ic  # type: ignore  # pylint: disable=E0401,W0611
 from .cypher import CypherItem
 
 
-class Query:
+class NodeVariable:  # pylint: disable=R0903
     """
-Manage the lifecycle of query plan.
+Represent a node variable within a query.
+    """
+    def __init__ (
+        self,
+        name: str,
+        item: int,
+        ) -> None:
+        """
+Constructor.
+        """
+        self.name: str = name
+        self.item: int = item
+
+
+    def __repr__ (
+        self,
+        ) -> str:
+        """
+Text representation.
+        """
+        _repr = {
+            "name": self.name,
+            "item": self.item,
+        }
+
+        return str(_repr)
+
+
+class PredicateMap:  # pylint: disable=R0903
+    """
+Represent a predicate that maps a property key/value pair onto a variable.
+    """
+    def __init__ (
+        self,
+        var: typing.Any,
+        key: str,
+        val: str,
+        ) -> None:
+        """
+Constructor.
+        """
+        self.var: typing.Any = var
+        self.key: str = key
+        self.val: str = val
+
+
+    def __repr__ (
+        self,
+        ) -> str:
+        """
+Text representation.
+        """
+        _repr = {
+            "name": self.var.name,
+            "key": self.key,
+            "val": self.val,
+        }
+
+        return str(_repr)
+
+
+class ProjectionElement:  # pylint: disable=R0903
+    """
+Represent an element of the returned projection.
+    """
+    def __init__ (
+        self,
+        name: str,
+        prop: typing.Optional[str],
+        ) -> None:
+        """
+Constructor.
+        """
+        self.name: str = name
+        self.prop: typing.Optional[str] = prop
+
+
+    def __repr__ (
+        self,
+        ) -> str:
+        """
+Text representation.
+        """
+        _repr = {
+            "name": self.name,
+            "prop": self.prop,
+        }
+
+        return str(_repr)
+
+
+class QueryPlan:
+    """
+Manage the lifecycle of a query plan.
     """
     def __init__ (
         self,
@@ -24,13 +117,30 @@ Manage the lifecycle of query plan.
 Constructor.
         """
         self.items: typing.List[CypherItem] = []
-        self.bindings: dict = {}
+        self.bindings: typing.Dict[str, typing.Any] = {}
+        self.predicates: typing.List[PredicateMap] = []
+        self.projections: typing.List[ProjectionElement] = []
+
+
+    def __repr__ (
+        self,
+        ) -> str:
+        """
+Text representation.
+        """
+        _repr = {
+            "bindings": self.bindings,
+            "predicates": self.predicates,
+            "projections": self.projections,
+        }
+
+        return str(_repr)
 
 
     def load_ast (
         self,
         tsv_iter: Iterator,
-        ) -> None:
+        ) -> "QueryPlan":
         """
 Load a TSV file of AST items.
         """
@@ -44,44 +154,75 @@ Load a TSV file of AST items.
 
             self.items.append(item)
 
+        # support method chaining
+        return self
 
-    def query_plan (  # pylint: disable=R0914
+
+    def parse_items (
         self,
-        ) -> typing.Tuple[str, str, str, str]:
+        *,
+        i: int = 0,
+        ) -> None:
         """
-Develop a query plan from the given AST items.
+Develop a query plan from the given AST items, traversed using
+recursive descent.
         """
-        i = 0
+        typestr = self.items[i].ast_typestr
 
-        while i < len(self.items):
-            if self.items[i].ast_typestr == "statement":
-                break
+        if typestr in ["line_comment"]:
+            # ignore
+            pass
 
-            i += 1
+        elif typestr == "statement":
+            ## for now, only handle the "query" statements
+            if self.items[i + 1].ast_typestr == "query":
+                match_i, return_i = self.items[i + 1].children
 
-        query_i = self.items[i].children[0]
-        match_i, ret_i = self.items[query_i].children
+                for j in self.items[match_i].children:
+                    self.parse_items(i = j)
 
-        ## bindings
-        pat_i = self.items[match_i].children[0]
-        pat_path_i = self.items[pat_i].children[0]
-        node_pat_i = self.items[pat_path_i].children[0]
+                for j in self.items[return_i].children:
+                    self.parse_items(i = j)
 
-        ident_i, map_i = self.items[node_pat_i].children
-        node_name = self.items[ident_i].literal  # pylint: disable=W0621
+        elif typestr == "pattern":
+            # begin building a new predicate
+            pat_i = self.items[i].children[0]
+            self.parse_items(i = pat_i)
 
-        self.bindings[node_name] = map_i
+        elif typestr == "pattern path":
+            # HERE: instantiate a triple/pattern and pass into recursion
+            pat_path_i = self.items[i].children[0]
+            self.parse_items(i = pat_path_i)
 
-        ## selection
-        prop_i, val_i = self.items[map_i].children
-        prop_key = self.items[prop_i].literal  # pylint: disable=W0621
-        prop_val = self.items[val_i].literal.strip("'")  # pylint: disable=W0621
+        elif typestr == "node pattern":
+            # represent a node pattern
+            ident_i, map_i = self.items[i].children
 
-        ## projection
-        proj_i = self.items[ret_i].children[0]
-        ident_i = self.items[proj_i].children[0]
-        ret_name = self.items[ident_i].literal  # pylint: disable=W0621
+            node_var = NodeVariable(
+                self.items[ident_i].literal,  # pylint: disable=W0621
+                map_i,
+                )
 
-        print(self.bindings)
+            self.bindings[node_var.name] = node_var
 
-        return (node_name, prop_key, prop_val, ret_name)
+            ## selection
+            prop_i, val_i = self.items[map_i].children
+
+            pred = PredicateMap(
+                node_var,
+                self.items[prop_i].literal,  # pylint: disable=W0621
+                self.items[val_i].literal.strip("'"),  # pylint: disable=W0621
+            )
+
+            self.predicates.append(pred)
+
+        elif typestr == "projection":
+            ## projection
+            ident_i = self.items[i].children[0]
+
+            proj_elem = ProjectionElement(
+                self.items[ident_i].literal,  # pylint: disable=W0621
+                None,
+                )
+
+            self.projections.append(proj_elem)

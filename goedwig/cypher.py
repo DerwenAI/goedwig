@@ -37,7 +37,7 @@ Constructor.
         self,
         ) -> str:
         """
-Printed representation for an AST item.
+Text representation.
         """
         return self.REPR_STR.format(
             self.ordinal,

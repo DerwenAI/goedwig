@@ -5,16 +5,16 @@
 4	3	4	6	66	pattern path	
 5	4	5	6	37	node pattern	
 6	5	6	7	10	identifier	tom
-7	5	6	10	17	label	
+7	5	6	10	17	label	:Person
 8	5	6	18	36	map	
 9	8	7	19	23	prop name	name
 10	8	7	24	35	string	'Tom Hanks'
 11	4	5	37	53	rel pattern	
 12	11	6	39	42	identifier	rel
-13	11	6	42	51	rel type	
+13	11	6	42	51	rel type	:DIRECTED
 14	4	5	53	66	node pattern	
 15	14	6	54	59	identifier	movie
-16	14	6	59	65	label	
+16	14	6	59	65	label	:Movie
 17	1	2	67	173	RETURN	
 18	17	3	74	90	projection	
 19	18	4	74	83	property	
