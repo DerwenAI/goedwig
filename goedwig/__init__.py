@@ -6,5 +6,5 @@ Importable package definitions.
 """
 
 from .cypher import CypherItem
-from .query import Query
+from .query import QueryPlan
 from .version import __version__

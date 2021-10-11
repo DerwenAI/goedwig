@@ -12,7 +12,7 @@ class CypherItem:  # pylint: disable=R0902,R0903
     """
 Represent data for one AST tree item in a parsed Cypher query.
     """
-    REPR_STR = "@{}[{}]\t{}..{}\t{:<4}{:<10}{:<16} |> {}"
+    REPR_STR = "@{:<3}[{:3}] {:3}..{:<3}\t{:<4}{:<16}{:<16} |> {}"
 
     def __init__ (
         self,
@@ -37,15 +37,17 @@ Constructor.
         self,
         ) -> str:
         """
-Printed representation for an AST item.
+Text representation.
         """
+        kiddos = ",".join(map(lambda x: str(x), self.children))  # pylint: disable=W0108
+
         return self.REPR_STR.format(
             self.ordinal,
             self.parent,
             self.s0,
             self.s1,
             self.depth,
-            str(self.children),
+            kiddos,
             self.ast_typestr,
             self.literal,
             )
