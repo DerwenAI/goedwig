@@ -1,5 +1,14 @@
 # `goedwig` changelog
 
+## 0.2.0
+
+2021-10-11
+
+  * recursive descent traversal of AST items to develop a query plan
+  * can now handle arbitrary length path patterns
+  * toJSON() calls to pass into partitions at runtime
+
+
 ## 0.1.4
 
 2021-10-10

@@ -37,6 +37,10 @@ if __name__ == "__main__":
     plan = eval(str(q))  # pylint: disable=W0123
     print(json.dumps(plan, indent=1, sort_keys=False))
 
+    path = q.paths[0]
+    for elem in path.elem:
+        print(json.dumps(elem.toJSON()))
+
     # testing assertions
     if testing:
         assert len(q.items) == 14
