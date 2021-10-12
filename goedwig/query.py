@@ -416,3 +416,12 @@ descent to traverse them.
             self.projections.append(ProjectionElement(bind_lit, prop_lit, alias_lit))
 
         return None
+
+
+    def get_paths (
+        self,
+        ) -> list:
+        """
+JSON representation.
+        """
+        return self.paths
