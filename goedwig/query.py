@@ -13,7 +13,7 @@ from icecream import ic  # type: ignore  # pylint: disable=E0401,W0611
 from .cypher import CypherItem
 
 
-class Variable:  # pylint: disable=R0903
+class Variable:
     """
 Represent a node or edge variable within a query.
     """
@@ -45,6 +45,19 @@ Text representation.
         return str(_repr)
 
 
+    def toJSON (  # pylint: disable=C0103
+        self,
+        ) -> dict:
+        """
+JSON-serializable representation
+        """
+        return {
+            "name": self.name,
+            "item": self.item,
+            "predicates": [ p.toJSON() for p in self.predicates ],
+        }
+
+
 class Predicate:  # pylint: disable=R0903
     """
 Represent a simple predicate.
@@ -52,11 +65,24 @@ Represent a simple predicate.
     def __init__ (
         self,
         var: Variable,
+        elem: str,
         ) -> None:
         """
 Constructor.
         """
         self.var: Variable = var
+        self.elem: str = elem
+
+
+    def toJSON (  # pylint: disable=C0103
+        self,
+        ) -> dict:
+        """
+JSON-serializable representation
+        """
+        return {
+            "elem": self.elem
+        }
 
 
 class PredicateMap (Predicate):  # pylint: disable=R0903
@@ -66,13 +92,14 @@ Represent a predicate that maps a property key/value pair onto a variable.
     def __init__ (
         self,
         var: Variable,
+        elem: str,
         key: str,
         val: str,
         ) -> None:
         """
 Constructor.
         """
-        super().__init__(var)
+        super().__init__(var, elem)
         self.key: str = key
         self.val: str = val
 
@@ -92,6 +119,20 @@ Text representation.
         return str(_repr)
 
 
+    def toJSON (  # pylint: disable=C0103
+        self,
+        ) -> dict:
+        """
+JSON-serializable representation
+        """
+        j = super().toJSON()
+        j["kind"] = "map"
+        j["key"] = self.key
+        j["val"] = self.val
+
+        return j
+
+
 class PredicateLabel (Predicate):  # pylint: disable=R0903
     """
 Represent a predicate that specifies a label.
@@ -99,12 +140,13 @@ Represent a predicate that specifies a label.
     def __init__ (
         self,
         var: Variable,
+        elem: str,
         label: str,
         ) -> None:
         """
 Constructor.
         """
-        super().__init__(var)
+        super().__init__(var, elem)
         self.label: str = label
 
 
@@ -122,6 +164,19 @@ Text representation.
         return str(_repr)
 
 
+    def toJSON (  # pylint: disable=C0103
+        self,
+        ) -> dict:
+        """
+JSON-serializable representation
+        """
+        j = super().toJSON()
+        j["kind"] = "label"
+        j["label"] = self.label
+
+        return j
+
+
 class PredicateDirection (Predicate):  # pylint: disable=R0903
     """
 Represent a predicate that specifies a direction.
@@ -129,12 +184,13 @@ Represent a predicate that specifies a direction.
     def __init__ (
         self,
         var: Variable,
+        elem: str,
         direction: str,
         ) -> None:
         """
 Constructor.
         """
-        super().__init__(var)
+        super().__init__(var, elem)
         self.direction: str = direction
 
 
@@ -152,6 +208,19 @@ Text representation.
         return str(_repr)
 
 
+    def toJSON (  # pylint: disable=C0103
+        self,
+        ) -> dict:
+        """
+JSON-serializable representation
+        """
+        j = super().toJSON()
+        j["kind"] = "direction"
+        j["direction"] = self.direction
+
+        return j
+
+
 class Path:  # pylint: disable=R0903
     """
 Represent a path pattern, with multiple node/edge/regex elements.
@@ -162,7 +231,7 @@ Represent a path pattern, with multiple node/edge/regex elements.
         """
 Constructor.
         """
-        self.elem: list = []
+        self.elem: typing.List[Variable] = []
 
 
     def __repr__ (
@@ -320,10 +389,10 @@ descent to traverse them.
                 child_type = self.items[j].ast_typestr
 
                 if child_type == "node pattern":
-                    path.elem.append(self.parse_items(i = j, debug=debug))
+                    path.elem.append(self.parse_items(i = j, debug=debug))  # type: ignore
 
                 elif child_type == "rel pattern":
-                    path.elem.append(self.parse_items(i = j, debug=debug))
+                    path.elem.append(self.parse_items(i = j, debug=debug))  # type: ignore
 
             return path
 
@@ -343,6 +412,7 @@ descent to traverse them.
                 if child_type == "label":
                     node_var.predicates.append(PredicateLabel(
                         node_var,
+                        "node",
                         self.items[j].literal.strip(":"),
                     ))
 
@@ -351,6 +421,7 @@ descent to traverse them.
 
                     node_var.predicates.append(PredicateMap(
                         node_var,
+                        "node",
                         self.items[key_i].literal,  # pylint: disable=W0621
                         self.items[val_i].literal.strip("'"),  # pylint: disable=W0621
                     ))
@@ -372,6 +443,7 @@ descent to traverse them.
                 if child_type == "label":
                     edge_var.predicates.append(PredicateLabel(
                         edge_var,
+                        "edge",
                         self.items[j].literal.strip(":"),
                     ))
 
@@ -380,6 +452,7 @@ descent to traverse them.
 
                     edge_var.predicates.append(PredicateMap(
                         edge_var,
+                        "edge",
                         self.items[key_i].literal,  # pylint: disable=W0621
                         self.items[val_i].literal.strip("'"),  # pylint: disable=W0621
                     ))
@@ -387,6 +460,7 @@ descent to traverse them.
                 elif child_type == "rel type":
                     edge_var.predicates.append(PredicateDirection(
                         edge_var,
+                        "edge",
                         self.items[j].literal.strip(":"),
                     ))
 
@@ -416,12 +490,3 @@ descent to traverse them.
             self.projections.append(ProjectionElement(bind_lit, prop_lit, alias_lit))
 
         return None
-
-
-    def get_paths (
-        self,
-        ) -> list:
-        """
-JSON representation.
-        """
-        return self.paths
